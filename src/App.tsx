@@ -4,7 +4,9 @@ import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 
 import Navbar from "./app/Navbar";
 import AddPostForm from "./features/posts/AddPostForm";
+import EditPostForm from "./features/posts/EditPostForm";
 import PostsList from "./features/posts/PostsList";
+import SinglePostPage from "./features/posts/SinglePostPage";
 
 export default function App() {
   return (
@@ -13,15 +15,19 @@ export default function App() {
         <Navbar />
         <div className="App">
           <Routes>
-            <Route
-              path="/"
-              element={
-                <>
-                  <AddPostForm />
-                  <PostsList />
-                </>
-              }
-            />
+            <Route path="/">
+              <Route
+                index
+                element={
+                  <>
+                    <AddPostForm />
+                    <PostsList />
+                  </>
+                }
+              />
+              <Route path="posts/:postId" element={<SinglePostPage />} />
+              <Route path="editPost/:postId" element={<EditPostForm />} />
+            </Route>
             <Route path="*" element={<Navigate replace to="/" />} />
           </Routes>
         </div>
