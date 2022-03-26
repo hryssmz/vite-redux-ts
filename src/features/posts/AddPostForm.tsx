@@ -2,12 +2,16 @@
 import { useState, ChangeEventHandler, MouseEventHandler } from "react";
 
 import { useDispatch, useSelector } from "../../app/hooks";
-import { postAdded } from "./postsSlice";
+import { addNewPost } from "./postsSlice";
+
+type RequestStatus = "idle" | "pending";
 
 export default function AddPostForm() {
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const [userId, setUserId] = useState("");
+  const [addRequestStatus, setAddRequestStatus] =
+    useState<RequestStatus>("idle");
 
   const dispatch = useDispatch();
 
@@ -20,15 +24,24 @@ export default function AddPostForm() {
   const onAuthorChanged: ChangeEventHandler<HTMLSelectElement> = e =>
     setUserId(e.target.value);
 
-  const onSavePostClicked: MouseEventHandler<HTMLButtonElement> = () => {
-    if (title && content) {
-      dispatch(postAdded(title, content, userId));
-      setTitle("");
-      setContent("");
+  const canSave =
+    [title, content, userId].every(Boolean) && addRequestStatus === "idle";
+
+  const onSavePostClicked: MouseEventHandler<HTMLButtonElement> = async () => {
+    if (canSave) {
+      try {
+        setAddRequestStatus("pending");
+        await dispatch(addNewPost({ title, content, user: userId })).unwrap();
+        setTitle("");
+        setContent("");
+        setUserId("");
+      } catch (err) {
+        console.error("Failed to save the post:", err);
+      } finally {
+        setAddRequestStatus("idle");
+      }
     }
   };
-
-  const canSave = Boolean(title) && Boolean(content) && Boolean(userId);
 
   return (
     <section>

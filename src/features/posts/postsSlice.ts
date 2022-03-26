@@ -1,6 +1,8 @@
 // features/posts/postsSlice.ts
-import { createSlice, nanoid, PayloadAction } from "@reduxjs/toolkit";
-import { sub } from "date-fns";
+import { createAsyncThunk, createSlice, PayloadAction } from "@reduxjs/toolkit";
+
+import type { RootState } from "../../app/store";
+import client from "../../utils/client";
 
 export type Reaction = "thumbsUp" | "hooray" | "heart" | "rocket" | "eyes";
 
@@ -13,38 +15,44 @@ export interface Post {
   reactions: Record<Reaction, number>;
 }
 
-export type PostsState = Post[];
+export interface InitialPost {
+  title: string;
+  content: string;
+  user: string;
+}
 
-const initialState: PostsState = [
-  {
-    id: "1",
-    title: "First Post!",
-    content: "Hello!",
-    user: "0",
-    date: sub(new Date(), { minutes: 10 }).toISOString(),
-    reactions: {
-      thumbsUp: 0,
-      hooray: 0,
-      heart: 0,
-      rocket: 0,
-      eyes: 0,
-    },
-  },
-  {
-    id: "2",
-    title: "Second Post",
-    content: "More text",
-    user: "2",
-    date: sub(new Date(), { minutes: 5 }).toISOString(),
-    reactions: {
-      thumbsUp: 0,
-      hooray: 0,
-      heart: 0,
-      rocket: 0,
-      eyes: 0,
-    },
-  },
-];
+export interface PostsState {
+  posts: Post[];
+  status: "idle" | "loading" | "succeeded" | "failed";
+  error: string | null;
+}
+
+export const fetchPosts = createAsyncThunk("posts/fetchPosts", async () => {
+  const response = await client.get<Post[]>("/fakeApi/posts");
+  return response.data;
+});
+
+export const addNewPost = createAsyncThunk(
+  "posts/addNewPost",
+  async (initialPost: InitialPost) => {
+    // we send the initial data to the fake API server
+    const response = await client.post<Post>("/fakeApi/posts", initialPost);
+    // The response includes the complete post object, including unique ID
+    return response.data;
+  }
+);
+
+const initialState: PostsState = {
+  posts: [],
+  status: "idle",
+  error: null,
+};
+
+interface PostUpdatedPayload {
+  id: string;
+  title: string;
+  content: string;
+}
 
 interface ReactionAddedPayload {
   postId: string;
@@ -55,47 +63,49 @@ export const postsSlice = createSlice({
   name: "posts",
   initialState,
   reducers: {
-    postAdded: {
-      reducer(state, action: PayloadAction<Post>) {
-        state.push(action.payload);
-      },
-      prepare(title: string, content: string, userId: string) {
-        return {
-          payload: {
-            id: nanoid(),
-            date: new Date().toISOString(),
-            title,
-            content,
-            user: userId,
-            reactions: {
-              thumbsUp: 0,
-              hooray: 0,
-              heart: 0,
-              rocket: 0,
-              eyes: 0,
-            },
-          },
-        };
-      },
+    reactionAdded(state, action: PayloadAction<ReactionAddedPayload>) {
+      const { postId, reaction } = action.payload;
+      const existingPost = state.posts.find(post => post.id === postId);
+      if (existingPost) {
+        existingPost.reactions[reaction]++;
+      }
     },
-    postUpdated(state, action: PayloadAction<Post>) {
+    postUpdated(state, action: PayloadAction<PostUpdatedPayload>) {
       const { id, title, content } = action.payload;
-      const existingPost = state.find(post => post.id === id);
+      const existingPost = state.posts.find(post => post.id === id);
       if (existingPost) {
         existingPost.title = title;
         existingPost.content = content;
       }
     },
-    reactionAdded(state, action: PayloadAction<ReactionAddedPayload>) {
-      const { postId, reaction } = action.payload;
-      const existingPost = state.find(post => post.id === postId);
-      if (existingPost) {
-        existingPost.reactions[reaction]++;
-      }
-    },
+  },
+  extraReducers(builder) {
+    builder
+      .addCase(fetchPosts.pending, state => {
+        state.status = "loading";
+      })
+      .addCase(fetchPosts.fulfilled, (state, action) => {
+        state.status = "succeeded";
+        // Add any fetched posts to the array
+        state.posts = state.posts.concat(action.payload);
+      })
+      .addCase(fetchPosts.rejected, (state, action) => {
+        state.status = "failed";
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+        state.error = action.error.message!;
+      })
+      .addCase(addNewPost.fulfilled, (state, action) => {
+        // we can directly add the new post object to our posts array
+        state.posts.push(action.payload);
+      });
   },
 });
 
-export const { postAdded, postUpdated, reactionAdded } = postsSlice.actions;
+export const { postUpdated, reactionAdded } = postsSlice.actions;
+
+export const selectAllPosts = (state: RootState) => state.posts.posts;
+
+export const selectPostById = (state: RootState, postId: string) =>
+  state.posts.posts.find(post => post.id === postId);
 
 export default postsSlice.reducer;

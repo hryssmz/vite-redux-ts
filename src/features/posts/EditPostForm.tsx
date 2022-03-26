@@ -3,15 +3,13 @@ import { useState, ChangeEventHandler, MouseEventHandler } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 
 import { useDispatch, useSelector } from "../../app/hooks";
-import { postUpdated } from "./postsSlice";
+import { postUpdated, selectPostById } from "./postsSlice";
 
 export default function EditPostForm() {
   const { postId } = useParams();
 
   // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-  const post = useSelector(state =>
-    state.posts.find(post => post.id === postId)
-  )!;
+  const post = useSelector(state => selectPostById(state, postId!))!;
 
   const [title, setTitle] = useState(post.title);
   const [content, setContent] = useState(post.content);

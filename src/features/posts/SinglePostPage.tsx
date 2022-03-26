@@ -2,6 +2,7 @@
 import { useParams, Link } from "react-router-dom";
 
 import { useSelector } from "../../app/hooks";
+import { selectPostById } from "./postsSlice";
 import PostAuthor from "./PostAuthor";
 import TimeAgo from "./TimeAgo";
 import ReactionButtons from "./ReactionButtons";
@@ -9,9 +10,8 @@ import ReactionButtons from "./ReactionButtons";
 export default function SinglePostPage() {
   const { postId } = useParams();
 
-  const post = useSelector(state =>
-    state.posts.find(post => post.id === postId)
-  );
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+  const post = useSelector(state => selectPostById(state, postId!));
 
   if (!post) {
     return (
