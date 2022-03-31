@@ -1,4 +1,4 @@
-// index.d.ts
+// client/index.d.ts
 declare namespace Client {
   interface User {
     id: string;
@@ -20,5 +20,14 @@ declare namespace Client {
     title: string;
     content: string;
     user: string;
+  }
+
+  interface Notification {
+    id: string;
+    date: string;
+    message: string;
+    user: string;
+    read: boolean;
+    isNew: boolean;
   }
 }

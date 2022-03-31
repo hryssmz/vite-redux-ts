@@ -1,0 +1,40 @@
+{
+  "configurations": [
+    {
+      "cwd": "${workspaceFolder}/backend",
+      "name": "backend dev",
+      "request": "launch",
+      "runtimeArgs": ["run", "dev"],
+      "runtimeExecutable": "npm",
+      "skipFiles": ["<node_internals>/**"],
+      "type": "pwa-node"
+    },
+    {
+      "cwd": "${workspaceFolder}/backend",
+      "name": "backend test",
+      "request": "launch",
+      "runtimeArgs": ["run", "test"],
+      "runtimeExecutable": "npm",
+      "skipFiles": ["<node_internals>/**"],
+      "type": "pwa-node"
+    },
+    {
+      "cwd": "${workspaceFolder}/frontend",
+      "name": "frontend dev",
+      "request": "launch",
+      "runtimeArgs": ["run", "dev"],
+      "runtimeExecutable": "npm",
+      "skipFiles": ["<node_internals>/**"],
+      "type": "pwa-node"
+    },
+    {
+      "cwd": "${workspaceFolder}/frontend",
+      "name": "frontend test",
+      "request": "launch",
+      "runtimeArgs": ["run", "test"],
+      "runtimeExecutable": "npm",
+      "skipFiles": ["<node_internals>/**"],
+      "type": "pwa-node"
+    }
+  ]
+}

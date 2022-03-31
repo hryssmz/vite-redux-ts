@@ -1,25 +1,13 @@
 // features/posts/postsSlice.ts
-import { createAsyncThunk, createSlice, PayloadAction } from "@reduxjs/toolkit";
+import {
+  createAsyncThunk,
+  createSlice,
+  createSelector,
+  PayloadAction,
+} from "@reduxjs/toolkit";
 
 import type { RootState } from "../../app/store";
 import client from "../../utils/client";
-
-export type Reaction = "thumbsUp" | "hooray" | "heart" | "rocket" | "eyes";
-
-export interface Post {
-  id: string;
-  date: string;
-  title: string;
-  content: string;
-  user: string;
-  reactions: Record<Reaction, number>;
-}
-
-export interface InitialPost {
-  title: string;
-  content: string;
-  user: string;
-}
 
 export interface PostsState {
   posts: Post[];
@@ -107,5 +95,10 @@ export const selectAllPosts = (state: RootState) => state.posts.posts;
 
 export const selectPostById = (state: RootState, postId: string) =>
   state.posts.posts.find(post => post.id === postId);
+
+export const selectPostsByUser = createSelector(
+  [selectAllPosts, (_state, userId: string) => userId],
+  (posts, userId) => posts.filter(post => post.user === userId)
+);
 
 export default postsSlice.reducer;
